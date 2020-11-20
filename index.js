@@ -2,13 +2,19 @@ const puppeteer = require('puppeteer');
 const jsonfile = require('jsonfile');
 const fs = require('fs');
 const cheerio = require('cheerio');
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
 
 const RESULTS_FOLDER_PATH = './scraping-results/'
 const CONFIG_FILE = './config.json'
 
+var DOMParser = require('xmldom').DOMParser;
+var parser = new DOMParser();
+
+
 const options = {
   headless: true,
-  // slowMo: 250
+  // slowMo: 2000
 }
 const episodeCounter = 10
 
@@ -17,9 +23,11 @@ async function main() {
   startBot()
 }
 
+global.asd = 123
+
 async function startBot() {
-  const url = 'view-source:https://bacakomik.co/one-piece-chapter-001-bahasa-indonesia/'
-  const url2 = 'https://bacakomik.co/one-piece-chapter-001-bahasa-indonesia/'
+  const url = 'https://bacakomik.co/one-piece-chapter-001-bahasa-indonesia/'
+  const url2 = 'view-source:https://bacakomik.co/one-piece-chapter-001-bahasa-indonesia/'
 
   const browser = await puppeteer.launch(options);
   const page = await browser.newPage();
@@ -35,11 +43,18 @@ async function startBot() {
   // await page.waitForSelector('#chimg')
   // const result = await page.$$('#chimg')
   try { 
-    console.log(await bacakomik.text())
-    const html = bacakomik.text()
-    fs.writeFileSync('test.html', await bacakomik.text())
+    // WORKS #1
+    // const html = await bacakomik.text()
+    // const { document } = (new JSDOM(html)).window;
+    // const arr = []
+    // document.querySelector('#chimg').childNodes.forEach((item) => {
+    //   arr.push(item.src)
+    // })
+    // console.log(arr)
 
-
+    // WORKS #2
+    const images = await page.evaluate(() => Array.from(document.querySelector('#chimg').childNodes).map(x => x.src))
+    console.log(images)
 
     // let data = await bacakomik.evaluate(() => {
     //   const title = document
@@ -48,7 +63,7 @@ async function startBot() {
     // console.log(123, data)
     
   } catch (error) {
-    console.log('CATCH')
+    console.log('CATCH', error)
     await browser.close()
   }
 
