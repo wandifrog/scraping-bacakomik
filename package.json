@@ -5,7 +5,15 @@
   "repository": "https://github.com/wandifrog/scraping-bacakomik.git",
   "author": "Wandi <wandifrog@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
+    "jsonfile": "^6.1.0",
+    "puppeteer": "^5.5.0",
     "puppeteer-core": "^5.5.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.13.0"
   }
 }
