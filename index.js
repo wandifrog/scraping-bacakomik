@@ -5,25 +5,21 @@ const cheerio = require('cheerio');
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
-const RESULTS_FOLDER_PATH = './scraping-results/'
+const ONE_PIECE_FOLDER_PATH = './one-piece/'
 const CONFIG_FILE = './config.json'
 
-var DOMParser = require('xmldom').DOMParser;
-var parser = new DOMParser();
-
+global.counter = 0
 
 const options = {
+  // headless: false,
+  // slowMo: 250
   headless: true,
-  // slowMo: 2000
 }
-const episodeCounter = 10
 
-async function main() {
-  // const counter = await getCounterValue()
+main()
+function main() {
   startBot()
 }
-
-global.asd = 123
 
 async function startBot() {
   const url = 'https://bacakomik.co/one-piece-chapter-001-bahasa-indonesia/'
@@ -32,43 +28,48 @@ async function startBot() {
   const browser = await puppeteer.launch(options);
   const page = await browser.newPage();
 
-  // await page.goto(url, { waitUntil: 'networkidle2' })
-  const bacakomik = await page.goto(url, { waitUntil: 'networkidle2' })
+  try {
+    await getChapter(page, url)
 
-  
-  // cheerio
-  // const asd = cheerio.load(bacakomik.text())  
-  // console.log(222, asd('div', '#chimg'))
-  
-  // await page.waitForSelector('#chimg')
-  // const result = await page.$$('#chimg')
-  try { 
-    // WORKS #1
-    // const html = await bacakomik.text()
-    // const { document } = (new JSDOM(html)).window;
-    // const arr = []
-    // document.querySelector('#chimg').childNodes.forEach((item) => {
-    //   arr.push(item.src)
-    // })
-    // console.log(arr)
-
-    // WORKS #2
-    const images = await page.evaluate(() => Array.from(document.querySelector('#chimg').childNodes).map(x => x.src))
-    console.log(images)
-
-    // let data = await bacakomik.evaluate(() => {
-    //   const title = document
-    //   return title
-    // })
-    // console.log(123, data)
-    
   } catch (error) {
     console.log('CATCH', error)
     await browser.close()
   }
 
-
   await browser.close();
+}
+
+async function getChapter(page, url) {
+  if (counter > 10) return
+  counter++
+
+  const bacakomik = await page.goto(url, { waitUntil: 'networkidle2' })
+
+  // cheerio
+  // const asd = cheerio.load(bacakomik.text())  
+  // console.log(222, asd('div', '#chimg'))
+
+  // await page.waitForSelector('#chimg')
+  // const result = await page.$$('#chimg')
+
+  // WORKS #1
+  // const html = await bacakomik.text()
+  // const { document } = (new JSDOM(html)).window;
+  // const arr = []
+  // document.querySelector('#chimg').childNodes.forEach((item) => {
+  //   arr.push(item.src)
+  // })
+  // console.log(arr)
+
+  // WORKS #2
+  const title = await page.evaluate(() => document.querySelector('.entry-title').textContent)
+  const nexChapterUrl = await page.evaluate(() => document.querySelector('.nextprev').lastElementChild.href)
+  const images = await page.evaluate(() => Array.from(document.querySelector('#chimg').childNodes).map(x => x.src && x.src).filter(y => y))
+  console.log(title, images)
+  const chapterNumber = title.match(/\d{3}/)[0]
+  jsonfile.writeFileSync(ONE_PIECE_FOLDER_PATH + `chapter-${chapterNumber}.json`, { title, images })
+
+  await getChapter(page, nexChapterUrl)
 }
 
 function delay(time) {
@@ -88,5 +89,3 @@ function getCounterValue() {
     resolve(counter)
   })
 }
-
-main()
