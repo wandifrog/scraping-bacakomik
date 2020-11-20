@@ -1,0 +1,11 @@
+{
+  "name": "scraping-bacakomik",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/wandifrog/scraping-bacakomik.git",
+  "author": "Wandi <wandifrog@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer-core": "^5.5.0"
+  }
+}
