@@ -8,10 +8,12 @@ const { JSDOM } = jsdom
 const ONE_PIECE_FOLDER_PATH = './one-piece/'
 const CONFIG_FILE = './config.json'
 
-global.counter = 0
-global.numberOfChapters = 5
+let counter = 0
+let numberOfChapters = 5
+let duplicateChapterPostfix = 2
 
-const options = {
+const fileOptions = { spaces: 2, EOL: '\r\n' }
+const browserOptions = {
   headless: true,
   // headless: false,
   // slowMo: 150
@@ -24,13 +26,13 @@ function main() {
 
 async function startBot() {
   const url = 'https://bacakomik.co/one-piece-chapter-001-bahasa-indonesia/'
-  const url2 = 'view-source:https://bacakomik.co/one-piece-chapter-001-bahasa-indonesia/'
+  const url2 = 'https://bacakomik.co/one-piece-chapter-985-bahasa-indonesia/'
 
-  const browser = await puppeteer.launch(options)
+  const browser = await puppeteer.launch(browserOptions)
   const page = await browser.newPage()
 
   try {
-    await getChapter(page, url)
+    await getChapter(page, url2)
 
   } catch (error) {
     console.log('CATCH', error)
@@ -63,20 +65,27 @@ async function getChapter(page, url) {
   // console.log(arr)
 
   // WORKS #2
-  const { currentUrl, title, nextChapterUrl, images } = await page.evaluate(() => {
+  const snap = await page.evaluate(() => {
     const currentUrl = document.URL
     const title = document.querySelector('.entry-title').textContent
-    const nextChapterUrl = document.querySelector('.nextprev').lastElementChild.href
     const images = Array.from(document.querySelector('#chimg').childNodes).map(x => x.src && x.src).filter(y => y)
-    return { currentUrl, title, nextChapterUrl, images }
+    const nextChapterUrl = document.querySelector('.nextprev').lastElementChild.href
+    return { currentUrl, title, images, nextChapterUrl }
   })
-  // const { currentUrl, title, nextChapterUrl, images } = snap
-  const chapterNumber = title.match(/\d{3}/)[0]
 
+  const { currentUrl, title, images, nextChapterUrl } = snap
+  const chapterNumber = title.match(/\d{3}/)[0]
   const filePath = ONE_PIECE_FOLDER_PATH + `chapter-${chapterNumber}.json`
   const fileData = { url: currentUrl, title, images }
-  const fileOptions = { spaces: 2, EOL: '\r\n' }
-  jsonfile.writeFileSync(filePath, fileData, fileOptions)
+
+  if (fs.existsSync(filePath)) {
+    const newFilePath = ONE_PIECE_FOLDER_PATH + `chapter-${chapterNumber}-${duplicateChapterPostfix}.json`
+    jsonfile.writeFileSync(newFilePath, fileData, fileOptions)
+    duplicateChapterPostfix++
+  } else {
+    jsonfile.writeFileSync(filePath, fileData, fileOptions)
+    duplicateChapterPostfix = 2
+  }
 
   await getChapter(page, nextChapterUrl)
 }
@@ -88,17 +97,15 @@ function delay(time) {
 }
 
 function getCounterValue() {
-  return new Promise(async (resolve, reject) => {
-    try {
+  return new Promise((resolve, reject) => {
+    (async function () {
       const { counter, ...configJson } = await jsonfile.readFile(CONFIG_FILE)
       const newConfigJson = {
         ...configJson,
         counter: counter + 1
       }
-      jsonfile.writeFileSync(CONFIG_FILE, newConfigJson)
+      jsonfile.writeFileSync(CONFIG_FILE, newConfigJson, fileOptions)
       resolve(counter)
-    } catch (error) {
-      reject(error)
-    }
+    })()
   })
 }
