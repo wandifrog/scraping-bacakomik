@@ -1,4 +1,4 @@
 # scraping-bacakomik
 Scraping One Piece manga.
 
-![android](http://wandifrog.github.io/scraping-bacakomik/img/one-piece-984.gif)
+![](http://wandifrog.github.io/scraping-bacakomik/img/one-piece-984.gif)

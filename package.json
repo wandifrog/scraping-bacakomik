@@ -9,6 +9,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "babel-eslint": "^10.1.0",
     "cheerio": "^1.0.0-rc.3",
     "htmlparser2": "^5.0.1",
     "jsdom": "^16.4.0",
